@@ -9,6 +9,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
+
+	"go.opentelemetry.io/collector/confmap"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 )
 
@@ -29,6 +31,7 @@ func TestMetricsBuilderConfig(t *testing.T) {
 					RedisClientsConnected:                  MetricConfig{Enabled: true},
 					RedisClientsMaxInputBuffer:             MetricConfig{Enabled: true},
 					RedisClientsMaxOutputBuffer:            MetricConfig{Enabled: true},
+					RedisClusterClusterEnabled:             MetricConfig{Enabled: true},
 					RedisCmdCalls:                          MetricConfig{Enabled: true},
 					RedisCmdLatency:                        MetricConfig{Enabled: true},
 					RedisCmdUsec:                           MetricConfig{Enabled: true},
@@ -48,9 +51,12 @@ func TestMetricsBuilderConfig(t *testing.T) {
 					RedisMaxmemory:                         MetricConfig{Enabled: true},
 					RedisMemoryFragmentationRatio:          MetricConfig{Enabled: true},
 					RedisMemoryLua:                         MetricConfig{Enabled: true},
+					RedisMemoryMemFragmentationBytes:       MetricConfig{Enabled: true},
 					RedisMemoryPeak:                        MetricConfig{Enabled: true},
 					RedisMemoryRss:                         MetricConfig{Enabled: true},
 					RedisMemoryUsed:                        MetricConfig{Enabled: true},
+					RedisMemoryUsedMemoryOverhead:          MetricConfig{Enabled: true},
+					RedisMemoryUsedMemoryStartup:           MetricConfig{Enabled: true},
 					RedisNetInput:                          MetricConfig{Enabled: true},
 					RedisNetOutput:                         MetricConfig{Enabled: true},
 					RedisRdbChangesSinceLastSave:           MetricConfig{Enabled: true},
@@ -59,6 +65,7 @@ func TestMetricsBuilderConfig(t *testing.T) {
 					RedisReplicationReplicaOffset:          MetricConfig{Enabled: true},
 					RedisRole:                              MetricConfig{Enabled: true},
 					RedisSlavesConnected:                   MetricConfig{Enabled: true},
+					RedisStatsTrackingTotalKeys:            MetricConfig{Enabled: true},
 					RedisUptime:                            MetricConfig{Enabled: true},
 				},
 				ResourceAttributes: ResourceAttributesConfig{
@@ -76,6 +83,7 @@ func TestMetricsBuilderConfig(t *testing.T) {
 					RedisClientsConnected:                  MetricConfig{Enabled: false},
 					RedisClientsMaxInputBuffer:             MetricConfig{Enabled: false},
 					RedisClientsMaxOutputBuffer:            MetricConfig{Enabled: false},
+					RedisClusterClusterEnabled:             MetricConfig{Enabled: false},
 					RedisCmdCalls:                          MetricConfig{Enabled: false},
 					RedisCmdLatency:                        MetricConfig{Enabled: false},
 					RedisCmdUsec:                           MetricConfig{Enabled: false},
@@ -95,9 +103,12 @@ func TestMetricsBuilderConfig(t *testing.T) {
 					RedisMaxmemory:                         MetricConfig{Enabled: false},
 					RedisMemoryFragmentationRatio:          MetricConfig{Enabled: false},
 					RedisMemoryLua:                         MetricConfig{Enabled: false},
+					RedisMemoryMemFragmentationBytes:       MetricConfig{Enabled: false},
 					RedisMemoryPeak:                        MetricConfig{Enabled: false},
 					RedisMemoryRss:                         MetricConfig{Enabled: false},
 					RedisMemoryUsed:                        MetricConfig{Enabled: false},
+					RedisMemoryUsedMemoryOverhead:          MetricConfig{Enabled: false},
+					RedisMemoryUsedMemoryStartup:           MetricConfig{Enabled: false},
 					RedisNetInput:                          MetricConfig{Enabled: false},
 					RedisNetOutput:                         MetricConfig{Enabled: false},
 					RedisRdbChangesSinceLastSave:           MetricConfig{Enabled: false},
@@ -106,6 +117,7 @@ func TestMetricsBuilderConfig(t *testing.T) {
 					RedisReplicationReplicaOffset:          MetricConfig{Enabled: false},
 					RedisRole:                              MetricConfig{Enabled: false},
 					RedisSlavesConnected:                   MetricConfig{Enabled: false},
+					RedisStatsTrackingTotalKeys:            MetricConfig{Enabled: false},
 					RedisUptime:                            MetricConfig{Enabled: false},
 				},
 				ResourceAttributes: ResourceAttributesConfig{
@@ -131,7 +143,7 @@ func loadMetricsBuilderConfig(t *testing.T, name string) MetricsBuilderConfig {
 	sub, err := cm.Sub(name)
 	require.NoError(t, err)
 	cfg := DefaultMetricsBuilderConfig()
-	require.NoError(t, sub.Unmarshal(&cfg))
+	require.NoError(t, sub.Unmarshal(&cfg, confmap.WithIgnoreUnused()))
 	return cfg
 }
 
